@@ -1,0 +1,115 @@
+openapi: "3.0.0"
+info:
+  title: VDC-Logging-Agent
+  version: v1
+  description: Monitoring and Logging agent for the DITAS SDK. 
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+paths:
+  /v1/trace:
+    post:
+      operationId: trace
+      summary: registeres a span in zipkin or updates an exsisting one
+      requestBody:
+        description: span information of a given trace
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TraceMessage'
+      responses:
+        '200':
+          description: |-
+            200 response
+  /v1/close:
+    post:
+      operationId: trace
+      summary: closes a span in zipkin 
+      requestBody:
+        description: span information of a given trace
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TraceMessage'
+      responses:
+        '200':
+          description: |-
+            200 response    
+  /v1/log:
+    post:
+      operationId: trace
+      summary: forwards a log message to elastic serach, automatilcy adding type and index information
+      requestBody:
+        description: span information of a given trace
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogMessage'
+      responses:
+        '200':
+          description: |-
+            200 response    
+  /v1/meter:
+    post:
+      operationId: trace
+      summary: forwards a log message to elastic serach, automatilcy adding type and index information
+      requestBody:
+        description: span information of a given trace
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MeterMessage'
+      responses:
+        '200':
+          description: |-
+            200 response   
+components:
+  schemas:
+    TraceMessage:
+      properties:
+        traceid:
+            type: string
+        parentSpanId:
+            type: string
+        spanId:
+            type: string
+        operation:
+            type: string
+        message:
+            type: string
+      example:
+        traceid: "5e27c67030932221"
+        spanid: "38357d8f309b379d"
+        operation: "mysql-query"
+        message: "select * from Patients"
+    MeterMessage:
+      properties:
+        timestamp:
+          type: string
+          format: "date-time"
+        value:
+          type: number
+          format: double
+        unit:
+            type: string
+        kind:
+          type: string
+      example:
+        timestamp: "2018-02-19T12:32:32Z"
+        value: 9231
+        unit: "byte per second"
+        kind: "payload size"
+    LogMessage:
+      properties:
+        timestamp:
+          type: string
+          format: "date-time"
+        value:
+          type: string
+      example:
+        timestamp: "2018-02-19T12:32:32Z"
+        value: "[INFO] [VDCController] [8] some logging message"
