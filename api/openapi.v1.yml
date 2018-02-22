@@ -24,7 +24,7 @@ paths:
             200 response
   /v1/close:
     post:
-      operationId: trace
+      operationId: close
       summary: closes a span in zipkin 
       requestBody:
         description: span information of a given trace
@@ -39,7 +39,7 @@ paths:
             200 response    
   /v1/log:
     post:
-      operationId: trace
+      operationId: log
       summary: forwards a log message to elastic serach, automatilcy adding type and index information
       requestBody:
         description: span information of a given trace
@@ -54,7 +54,7 @@ paths:
             200 response    
   /v1/meter:
     post:
-      operationId: trace
+      operationId: meter
       summary: forwards a log message to elastic serach, automatilcy adding type and index information
       requestBody:
         description: span information of a given trace
