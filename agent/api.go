@@ -43,16 +43,18 @@ func (agent *Agent) Meter(w http.ResponseWriter, req *http.Request) {
 	if agent.isDebugging {
 		//TODO: put request body into meter.raw
 	}
-
+	data := ElasticData{
+		Meter: &meter,
+	}
 	if (meter.Timestamp == time.Time{}) {
-		meter.Timestamp = time.Now()
+		data.Timestamp = time.Now()
 	}
 
 	ctx := context.Background()
 	if _, err := agent.elastic.Index().
 		Index(agent.getElasticIndex()).
-		Type("meter").
-		BodyJson(meter).
+		Type("data").
+		BodyJson(data).
 		Do(ctx); err != nil {
 		log.Errorf("could not write to elastic serach :%+v\n", err)
 	}
@@ -67,16 +69,18 @@ func (agent *Agent) Log(w http.ResponseWriter, req *http.Request) {
 
 	defer req.Body.Close()
 
-	lm := LogMessage{
+	data := ElasticData{
 		Timestamp: time.Now(),
-		Value:     string(body),
+		Log: &LogMessage{
+			Value: string(body),
+		},
 	}
 
 	ctx := context.Background()
 	if _, err := agent.elastic.Index().
 		Index(agent.getElasticIndex()).
-		Type("log").
-		BodyJson(lm).
+		Type("data").
+		BodyJson(data).
 		Do(ctx); err != nil {
 		log.Errorf("could not write to elastic serach :%+v\n", err)
 	}

@@ -71,9 +71,8 @@ func NewAgent(name string, zipkinAddressPtr string, elasticAddress string, debug
 		isDebugging: debug,
 	}
 
-	if _, err := ctx.init(); err != nil {
+	if err := ctx.init(); err != nil {
 		log.Errorf("unable to initilize this agent: %+v\n", err)
-		return nil, err
 	}
 
 	return &ctx, nil
@@ -92,16 +91,22 @@ type TraceMessage struct {
 	Message      string `json:"message"`
 }
 
+type ElasticData struct {
+	Timestamp time.Time     `json:"@timestamp"`
+	Meter     *MeterMessage `json:"meter"`
+	Log       *LogMessage   `json:"log"`
+}
+
 type MeterMessage struct {
 	Timestamp time.Time `json:"@timestamp"`
-	Value     float64   `json:"value"`
-	Unit      string    `json:"unit"`
-	Raw       string    `json:"appendix"`
+	Value     float64   `json:"meter.value"`
+	Unit      string    `json:"meter.unit"`
+	Raw       string    `json:"meter.appendix"`
 }
 
 type LogMessage struct {
 	Timestamp time.Time `json:"@timestamp"`
-	Value     string    `json:"value"`
+	Value     string    `json:"log.value"`
 }
 
 //tracing functions
@@ -135,50 +140,69 @@ func (t TraceMessage) build() *zipkin.SpanContext {
 	return &context
 }
 
-func (agent *Agent) init() (*elastic.IndicesCreateResult, error) {
-	mapping := `{
-		"settings":{
-			"number_of_shards":1,
-			"number_of_replicas":0
-		},
-		"mappings":{
-			"metic":{
-				"properties":{
-					"@timestamp":{
-						"type":"date"
-					},
-					"metic.value":{
-						"type":"double"
-					},
-					"metic.unit":{
-						"type":"text"
-					},
-					"metic.appendix":{
-						"type":"object"
+func (agent *Agent) init() error {
+	ctx := context.Background()
+	mappings := `
+			"properties": {
+				"@timestamp": {
+					"type": "date"
+				},
+				"meter": {
+					"properties": {
+						"meter.value": {
+							"type": "double"
+						},
+						"meter.unit": {
+							"type": "text"
+						},
+						"meter.appendix": {
+							"type": "object"
+						}
 					}
-					
-				}
-			},
-			"log":{
-				"properties":{
-					"@timestamp":{
-						"type":"date"
-					},
-					"log.value":{
-						"type":"object"
+				},
+				"log": {
+					"properties": {
+						"log.value": {
+							"type": "text"
+						}
 					}
 				}
 			}
-		}
-	}`
+		`
 
-	ctx := context.Background()
-	createIndex, err := agent.elastic.CreateIndex(agent.getElasticIndex()).BodyString(mapping).Do(ctx)
-	if err != nil {
-		return nil, err
+	if ok, err := agent.elastic.IndexExists(agent.getElasticIndex()).Do(ctx); !ok || err != nil {
+		log.Infof("creating inxex %s", agent.getElasticIndex())
+
+		index := fmt.Sprintf(`{
+			"settings": {
+				"number_of_shards": 1,
+				"number_of_replicas": 0
+			},
+			"mappings": {
+				"data": {
+					%s
+				}
+			}
+		}`, mappings)
+
+		_, err := agent.elastic.CreateIndex(agent.getElasticIndex()).BodyString(index).Do(ctx)
+		if err != nil {
+			return err
+		}
+		return nil
+
+	} else {
+		_, err := agent.elastic.PutMapping().
+			Index(agent.getElasticIndex()).
+			Type("data").
+			BodyString(fmt.Sprintf("{%s},", mappings)).
+			Do(ctx)
+		if err != nil {
+			return err
+		}
+		return nil
 	}
 
-	return createIndex, nil
 }
 
 func (agent *Agent) getElasticIndex() string {
