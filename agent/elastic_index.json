@@ -1,0 +1,35 @@
+{
+    "settings": {
+        "number_of_shards": 1,
+        "number_of_replicas": 0
+    },
+    "mappings": {
+        "data": {
+            "properties": {
+                "@timestamp": {
+                    "type": "date"
+                },
+                "metic": {
+                    "properties": {
+                        "value": {
+                            "type": "double"
+                        },
+                        "unit": {
+                            "type": "text"
+                        },
+                        "appendix": {
+                            "type": "object"
+                        }
+                    }
+                },
+                "log": {
+                    "properties": {
+                        "value": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

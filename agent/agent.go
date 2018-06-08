@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/DITAS-Project/TUBUtil/util"
 	"github.com/olivere/elastic"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
@@ -52,6 +53,8 @@ func NewAgent(name string, zipkinAddressPtr string, elasticAddress string, debug
 	}
 
 	opentracing.InitGlobalTracer(tracer)
+
+	util.WaitForAvailible(elasticAddress, nil)
 
 	client, err := elastic.NewSimpleClient(
 		elastic.SetURL(elasticAddress),
@@ -206,8 +209,7 @@ func (agent *Agent) init() error {
 }
 
 func (agent *Agent) getElasticIndex() string {
-	t := time.Now()
-	return fmt.Sprintf("%s-%d-%02d-%02d", agent.name, t.Year(), t.Month(), t.Day())
+	return util.GetElasticIndex(agent.name)
 }
 
 func (agent *Agent) getSpan(trace TraceMessage) opentracing.Span {
