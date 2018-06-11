@@ -97,9 +97,9 @@ func NewAgent() (*Agent, error) {
 		isDebugging: viper.GetBool("verbose"),
 	}
 
-	if err := ctx.init(); err != nil {
-		log.Errorf("unable to initilize this agent: %+v\n", err)
-	}
+	// if err := ctx.init(); err != nil {
+	// 	log.Errorf("unable to initilize this agent: %+v\n", err)
+	// }
 
 	return &ctx, nil
 }
