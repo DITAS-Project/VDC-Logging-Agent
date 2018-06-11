@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  branch = "master"
+  name = "github.com/DITAS-Project/TUBUtil"
+  packages = ["util"]
+  revision = "4f50f6c1549d7ba108349a4056db0c2e45b72a47"
+
+[[projects]]
   name = "github.com/Shopify/sarama"
   packages = ["."]
   revision = "f7be6aa2bc7b2e38edf816b08b582782194a1c02"
@@ -38,6 +44,12 @@
   version = "v1.1.0"
 
 [[projects]]
+  name = "github.com/fsnotify/fsnotify"
+  packages = ["."]
+  revision = "c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9"
+  version = "v1.4.7"
+
+[[projects]]
   name = "github.com/go-logfmt/logfmt"
   packages = ["."]
   revision = "390ab7935ee28ec6b286364bba9b4dd6410cb3d5"
@@ -69,19 +81,57 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/hashicorp/hcl"
+  packages = [
+    ".",
+    "hcl/ast",
+    "hcl/parser",
+    "hcl/printer",
+    "hcl/scanner",
+    "hcl/strconv",
+    "hcl/token",
+    "json/parser",
+    "json/scanner",
+    "json/token"
+  ]
+  revision = "ef8a98b0bbce4a65b5aa4c368430a80ddc533168"
+
+[[projects]]
+  branch = "master"
   name = "github.com/kr/logfmt"
   packages = ["."]
   revision = "b84e30acd515aadc4b783ad4ff83aff3299bdfe0"
 
 [[projects]]
+  name = "github.com/magiconair/properties"
+  packages = ["."]
+  revision = "c2353362d570a7bfa228149c62842019201cfb71"
+  version = "v1.8.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/mailru/easyjson"
-  packages = [".","buffer","jlexer","jwriter"]
+  packages = [
+    ".",
+    "buffer",
+    "jlexer",
+    "jwriter"
+  ]
   revision = "32fa128f234d041f196a9f3e0fea5ac9772c08e1"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/mitchellh/mapstructure"
+  packages = ["."]
+  revision = "bb74f1db0675b241733089d5a1faa5dd8b0ef57b"
+
+[[projects]]
   name = "github.com/olivere/elastic"
-  packages = [".","config","uritemplates"]
+  packages = [
+    ".",
+    "config",
+    "uritemplates"
+  ]
   revision = "2982cec1ae1eb496c4e6ec43b4136bedb977fec7"
   version = "v6.1.8"
 
@@ -93,15 +143,32 @@
 
 [[projects]]
   name = "github.com/opentracing/opentracing-go"
-  packages = [".","ext","log"]
+  packages = [
+    ".",
+    "ext",
+    "log"
+  ]
   revision = "1949ddbfd147afd4d964a9f00b24eb291e0e7c38"
   version = "v1.0.2"
 
 [[projects]]
   name = "github.com/openzipkin/zipkin-go-opentracing"
-  packages = [".","flag","thrift/gen-go/scribe","thrift/gen-go/zipkincore","types","wire"]
+  packages = [
+    ".",
+    "flag",
+    "thrift/gen-go/scribe",
+    "thrift/gen-go/zipkincore",
+    "types",
+    "wire"
+  ]
   revision = "45e90b00710a4c34a1a7d8a78d90f9b010b0bd4d"
   version = "v0.3.2"
+
+[[projects]]
+  name = "github.com/pelletier/go-toml"
+  packages = ["."]
+  revision = "c01d1270ff3e442a8a57cddc1c92dc1138598194"
+  version = "v1.2.0"
 
 [[projects]]
   name = "github.com/pierrec/lz4"
@@ -134,6 +201,39 @@
   version = "v1.0.4"
 
 [[projects]]
+  name = "github.com/spf13/afero"
+  packages = [
+    ".",
+    "mem"
+  ]
+  revision = "787d034dfe70e44075ccc060d346146ef53270ad"
+  version = "v1.1.1"
+
+[[projects]]
+  name = "github.com/spf13/cast"
+  packages = ["."]
+  revision = "8965335b8c7107321228e3e3702cab9832751bac"
+  version = "v1.2.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/spf13/jwalterweatherman"
+  packages = ["."]
+  revision = "7c0cea34c8ece3fbeb2b27ab9b59511d360fb394"
+
+[[projects]]
+  name = "github.com/spf13/pflag"
+  packages = ["."]
+  revision = "583c0c0531f06d5278b7d917446061adc344b5cd"
+  version = "v1.0.1"
+
+[[projects]]
+  name = "github.com/spf13/viper"
+  packages = ["."]
+  revision = "b5e8006cbee93ec955a89ab31e0e3ce3204f3736"
+  version = "v1.0.2"
+
+[[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
@@ -148,12 +248,34 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
-  packages = ["unix","windows"]
+  packages = [
+    "unix",
+    "windows"
+  ]
   revision = "37707fdb30a5b38865cfb95e5aab41707daec7fd"
+
+[[projects]]
+  name = "golang.org/x/text"
+  packages = [
+    "internal/gen",
+    "internal/triegen",
+    "internal/ucd",
+    "transform",
+    "unicode/cldr",
+    "unicode/norm"
+  ]
+  revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
+  version = "v0.3.0"
+
+[[projects]]
+  name = "gopkg.in/yaml.v2"
+  packages = ["."]
+  revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
+  version = "v2.2.1"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "866e77dba84849fb07aa20f16185594c27ff826ecca09ebddb0a281447e77e0b"
+  inputs-digest = "dfe5de78c4ebfd367f27d220be081287415872d0dc17c074996da0493f5415d5"
   solver-name = "gps-cdcl"
   solver-version = 1

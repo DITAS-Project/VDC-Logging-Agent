@@ -25,6 +25,8 @@ import (
 	"time"
 
 	"github.com/DITAS-Project/VDC-Logging-Agent/agent"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
@@ -33,27 +35,46 @@ import (
 var log = logrus.New()
 
 func main() {
-	//read cmd options
-	portPtr := flag.Int("port", 8484, "port that the agent should listen on")
-	zipkinAddressPtr := flag.String("zipkin", "http://localhost:9411/api/v1/spans", "zipkin address")
-	vdcAddressPtr := flag.String("vdc", "http://0.0.0.0:0", "vdc address to be send to zipkin")
-	vdcName := flag.String("name", "vdc", "vdc name that this agent is paired with (used as the elastic search index)")
-	elasticAddress := flag.String("elastic", "http://127.0.0.1:9200", "elastic search address")
-	var wait time.Duration
-	flag.DurationVar(&wait, "wait", 15, "the duration for which the server gracefully wait for existing connections to finish in secounds")
 
-	flag.Parse()
+	viper.SetConfigName("logging")
+	viper.AddConfigPath("/.config/")
+	viper.AddConfigPath(".config/")
+	viper.AddConfigPath(".")
+
+	viper.SetDefault("Port", 8484)
+	viper.SetDefault("ZipkinEndpoint", "http://localhost:9411/api/v1/spans")
+	viper.SetDefault("VDCName", "dummyVDC")
+	viper.SetDefault("ElasticSearchURL", "http://127.0.0.1:9200")
+	viper.SetDefault("waitTime", time.Duration(1.5e+10))
+	viper.SetDefault("verbose", false)
+
+	viper.RegisterAlias("zipkin", "ZipkinEndpoint")
+	viper.RegisterAlias("vdc", "Endpoint")
+	viper.RegisterAlias("name", "VDCName")
+	viper.RegisterAlias("elastic", "ElasticSearchURL")
+
+	//read cmd options
+	flag.Bool("verbose", false, "for debugging and logging")
+	flag.Int("Port", viper.GetInt("Port"), "port that the agent should listen on")
+	flag.String("zipkin", "http://localhost:9411/api/v1/spans", "zipkin address")
+	flag.String("vdc", "http://0.0.0.0:0", "vdc address to be send to zipkin")
+	flag.String("name", "vdc", "vdc name that this agent is paired with (used as the elastic search index)")
+	flag.String("elastic", "http://127.0.0.1:9200", "elastic search address")
+
+	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
+	pflag.Parse()
+	viper.BindPFlags(pflag.CommandLine)
 
 	log.SetLevel(logrus.DebugLevel)
 
-	agent, err := agent.NewAgent(*vdcName, *zipkinAddressPtr, *elasticAddress, true, *vdcAddressPtr)
+	agent, err := agent.NewAgent()
 
 	if err != nil {
 		log.Errorf("Failed to init agent %s", err)
 		os.Exit(-1)
 	}
 
-	startServer(agent, *portPtr, wait)
+	startServer(agent, viper.GetInt("Port"), viper.GetDuration("waitTime"))
 
 }
 

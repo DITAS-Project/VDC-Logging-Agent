@@ -13,10 +13,24 @@ import (
 	zipkin "github.com/openzipkin/zipkin-go-opentracing"
 	"github.com/openzipkin/zipkin-go-opentracing/types"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 var log = logrus.New()
 
+type Configuration struct {
+	Port int //the port of this service
+
+	ZipkinEndpoint string //zipkin endpoint
+
+	Endpoint string // the vdc endpoint
+	VDCName  string // VDCName (used for the index name in elastic serach)
+
+	ElasticSearchURL string //eleasticSerach endpoint
+
+	waitTime time.Duration //the duration for which the server gracefully wait for existing connections to finish in secounds
+
+}
 type Agent struct {
 	name        string
 	spans       map[string]opentracing.Span
@@ -25,9 +39,18 @@ type Agent struct {
 	isDebugging bool
 }
 
-func NewAgent(name string, zipkinAddressPtr string, elasticAddress string, debug bool, vdcAddress string) (*Agent, error) {
+func NewAgent() (*Agent, error) {
+
+	err := viper.ReadInConfig()
+	cnf := Configuration{}
+	if err != nil {
+		log.Error("failed to load config", err)
+		return nil, err
+	}
+	viper.Unmarshal(&cnf)
+
 	// Create our HTTP collector.
-	collector, err := zipkin.NewHTTPCollector(zipkinAddressPtr)
+	collector, err := zipkin.NewHTTPCollector(cnf.ZipkinEndpoint)
 
 	if err != nil {
 		log.Errorf("unable to create Zipkin HTTP collector: %+v\n", err)
@@ -35,16 +58,16 @@ func NewAgent(name string, zipkinAddressPtr string, elasticAddress string, debug
 	}
 
 	// Create our recorder.
-	recorder := zipkin.NewRecorder(collector, debug, vdcAddress, "vdc-agent")
+	recorder := zipkin.NewRecorder(collector, viper.GetBool("verbose"), cnf.Endpoint, "vdc-agent")
 
 	tracer, err := zipkin.NewTracer(recorder,
 		zipkin.WithLogger(zipkin.LoggerFunc(func(kv ...interface{}) error {
 			log.Info(kv)
 			return nil
 		})),
-		zipkin.DebugMode(debug),
-		zipkin.DebugAssertUseAfterFinish(debug),
-		zipkin.DebugAssertUseAfterFinish(debug),
+		zipkin.DebugMode(viper.GetBool("verbose")),
+		zipkin.DebugAssertUseAfterFinish(viper.GetBool("verbose")),
+		zipkin.DebugAssertUseAfterFinish(viper.GetBool("verbose")),
 	)
 
 	if err != nil {
@@ -54,10 +77,10 @@ func NewAgent(name string, zipkinAddressPtr string, elasticAddress string, debug
 
 	opentracing.InitGlobalTracer(tracer)
 
-	util.WaitForAvailible(elasticAddress, nil)
+	util.WaitForAvailible(cnf.ElasticSearchURL, nil)
 
 	client, err := elastic.NewSimpleClient(
-		elastic.SetURL(elasticAddress),
+		elastic.SetURL(cnf.ElasticSearchURL),
 		elastic.SetErrorLog(log),
 		elastic.SetInfoLog(log),
 	)
@@ -67,11 +90,11 @@ func NewAgent(name string, zipkinAddressPtr string, elasticAddress string, debug
 	}
 
 	var ctx = Agent{
-		name:        name,
+		name:        cnf.VDCName,
 		spans:       make(map[string]opentracing.Span),
 		collector:   collector,
 		elastic:     client,
-		isDebugging: debug,
+		isDebugging: viper.GetBool("verbose"),
 	}
 
 	if err := ctx.init(); err != nil {
