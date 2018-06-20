@@ -44,7 +44,8 @@ func (agent *Agent) Meter(w http.ResponseWriter, req *http.Request) {
 		//TODO: put request body into meter.raw
 	}
 	data := ElasticData{
-		Meter: &meter,
+		Timestamp: time.Now(),
+		Meter:     &meter,
 	}
 	if (meter.Timestamp == time.Time{}) {
 		data.Timestamp = time.Now()

@@ -119,20 +119,20 @@ type TraceMessage struct {
 
 type ElasticData struct {
 	Timestamp time.Time     `json:"@timestamp"`
-	Meter     *MeterMessage `json:"meter"`
-	Log       *LogMessage   `json:"log"`
+	Meter     *MeterMessage `json:"meter,omitempty"`
+	Log       *LogMessage   `json:"log,omitempty"`
 }
 
 type MeterMessage struct {
-	Timestamp time.Time `json:"@timestamp"`
-	Value     float64   `json:"meter.value"`
-	Unit      string    `json:"meter.unit"`
-	Raw       string    `json:"meter.appendix"`
+	Timestamp time.Time `json:"timestamp,omitempty"`
+	Value     float64   `json:"value,omitempty"`
+	Unit      string    `json:"unit,omitempty"`
+	Raw       string    `json:"appendix,omitempty"`
 }
 
 type LogMessage struct {
-	Timestamp time.Time `json:"@timestamp"`
-	Value     string    `json:"log.value"`
+	Timestamp time.Time `json:"timestamp,omitempty"`
+	Value     string    `json:"value,omitempty"`
 }
 
 //tracing functions
