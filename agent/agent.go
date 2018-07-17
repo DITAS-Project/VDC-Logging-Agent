@@ -50,6 +50,10 @@ func NewAgent() (*Agent, error) {
 	}
 	viper.Unmarshal(&cnf)
 
+	return CreateAgent(cnf)
+}
+
+func CreateAgent(cnf Configuration) (*Agent, error) {
 	var collector zipkin.Collector
 	if viper.GetBool("tracing") {
 		// Create our HTTP collector.
