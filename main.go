@@ -42,6 +42,7 @@ func main() {
 	viper.AddConfigPath(".")
 
 	viper.SetDefault("Port", 8484)
+	viper.SetDefault("tracing", true)
 	viper.SetDefault("ZipkinEndpoint", "http://localhost:9411/api/v1/spans")
 	viper.SetDefault("VDCName", "dummyVDC")
 	viper.SetDefault("ElasticSearchURL", "http://127.0.0.1:9200")

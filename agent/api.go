@@ -1,7 +1,6 @@
 package agent
 
 import (
-	"context"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -11,29 +10,33 @@ import (
 func (agent *Agent) Trace(w http.ResponseWriter, req *http.Request) {
 	log.Info("got trace request")
 
-	var trace TraceMessage
-	_ = json.NewDecoder(req.Body).Decode(&trace)
+	if agent.tracing {
+		var trace TraceMessage
+		_ = json.NewDecoder(req.Body).Decode(&trace)
 
-	log.Infof("trace request for %s : %s", trace.SpanId, trace.Operation)
+		log.Infof("trace request for %s : %s", trace.SpanId, trace.Operation)
 
-	span := agent.getSpan(trace)
+		span := agent.getSpan(trace)
 
-	if trace.Message != "" {
-		span.LogEvent(trace.Message)
+		if trace.Message != "" {
+			span.LogEvent(trace.Message)
+		}
 	}
 }
 
 func (agent *Agent) Close(w http.ResponseWriter, req *http.Request) {
 	log.Info("got trace finish request")
 
-	var trace TraceMessage
-	_ = json.NewDecoder(req.Body).Decode(&trace)
+	if agent.tracing {
+		var trace TraceMessage
+		_ = json.NewDecoder(req.Body).Decode(&trace)
 
-	log.Infof("trace request for %s : %s", trace.SpanId, trace.Operation)
+		log.Infof("trace request for %s : %s", trace.SpanId, trace.Operation)
 
-	var span = agent.getSpan(trace)
-	span.Finish()
-	agent.freeSpan(trace)
+		var span = agent.getSpan(trace)
+		span.Finish()
+		agent.freeSpan(trace)
+	}
 }
 
 func (agent *Agent) Meter(w http.ResponseWriter, req *http.Request) {
@@ -51,14 +54,6 @@ func (agent *Agent) Meter(w http.ResponseWriter, req *http.Request) {
 		data.Timestamp = time.Now()
 	}
 
-	ctx := context.Background()
-	if _, err := agent.elastic.Index().
-		Index(agent.getElasticIndex()).
-		Type("data").
-		BodyJson(data).
-		Do(ctx); err != nil {
-		log.Errorf("could not write to elastic serach :%+v\n", err)
-	}
 }
 
 func (agent *Agent) Log(w http.ResponseWriter, req *http.Request) {
@@ -76,13 +71,5 @@ func (agent *Agent) Log(w http.ResponseWriter, req *http.Request) {
 			Value: string(body),
 		},
 	}
-
-	ctx := context.Background()
-	if _, err := agent.elastic.Index().
-		Index(agent.getElasticIndex()).
-		Type("data").
-		BodyJson(data).
-		Do(ctx); err != nil {
-		log.Errorf("could not write to elastic serach :%+v\n", err)
-	}
+	agent.AddToES(data)
 }

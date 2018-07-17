@@ -37,6 +37,7 @@ type Agent struct {
 	collector   zipkin.Collector
 	elastic     *elastic.Client
 	isDebugging bool
+	tracing     bool //if tracing should be loaded or not
 }
 
 func NewAgent() (*Agent, error) {
@@ -49,34 +50,36 @@ func NewAgent() (*Agent, error) {
 	}
 	viper.Unmarshal(&cnf)
 
-	// Create our HTTP collector.
-	collector, err := zipkin.NewHTTPCollector(cnf.ZipkinEndpoint)
+	var collector zipkin.Collector
+	if viper.GetBool("tracing") {
+		// Create our HTTP collector.
+		collector, err := zipkin.NewHTTPCollector(cnf.ZipkinEndpoint)
 
-	if err != nil {
-		log.Errorf("unable to create Zipkin HTTP collector: %+v\n", err)
-		return nil, err
+		if err != nil {
+			log.Errorf("unable to create Zipkin HTTP collector: %+v\n", err)
+			return nil, err
+		}
+
+		// Create our recorder.
+		recorder := zipkin.NewRecorder(collector, viper.GetBool("verbose"), cnf.Endpoint, "vdc-agent")
+
+		tracer, err := zipkin.NewTracer(recorder,
+			zipkin.WithLogger(zipkin.LoggerFunc(func(kv ...interface{}) error {
+				log.Info(kv)
+				return nil
+			})),
+			zipkin.DebugMode(viper.GetBool("verbose")),
+			zipkin.DebugAssertUseAfterFinish(viper.GetBool("verbose")),
+			zipkin.DebugAssertUseAfterFinish(viper.GetBool("verbose")),
+		)
+
+		if err != nil {
+			log.Errorf("unable to create Zipkin tracer: %+v\n", err)
+			return nil, err
+		}
+
+		opentracing.InitGlobalTracer(tracer)
 	}
-
-	// Create our recorder.
-	recorder := zipkin.NewRecorder(collector, viper.GetBool("verbose"), cnf.Endpoint, "vdc-agent")
-
-	tracer, err := zipkin.NewTracer(recorder,
-		zipkin.WithLogger(zipkin.LoggerFunc(func(kv ...interface{}) error {
-			log.Info(kv)
-			return nil
-		})),
-		zipkin.DebugMode(viper.GetBool("verbose")),
-		zipkin.DebugAssertUseAfterFinish(viper.GetBool("verbose")),
-		zipkin.DebugAssertUseAfterFinish(viper.GetBool("verbose")),
-	)
-
-	if err != nil {
-		log.Errorf("unable to create Zipkin tracer: %+v\n", err)
-		return nil, err
-	}
-
-	opentracing.InitGlobalTracer(tracer)
-
 	util.WaitForAvailible(cnf.ElasticSearchURL, nil)
 
 	client, err := elastic.NewSimpleClient(
@@ -95,6 +98,7 @@ func NewAgent() (*Agent, error) {
 		collector:   collector,
 		elastic:     client,
 		isDebugging: viper.GetBool("verbose"),
+		tracing:     viper.GetBool("tracing"),
 	}
 
 	// if err := ctx.init(); err != nil {
@@ -166,7 +170,7 @@ func (t TraceMessage) build() *zipkin.SpanContext {
 	return &context
 }
 
-func (agent *Agent) init() error {
+func (agent *Agent) InitES() error {
 	ctx := context.Background()
 	mappings := `
 			"properties": {
@@ -258,4 +262,20 @@ func (agent *Agent) getSpan(trace TraceMessage) opentracing.Span {
 
 func (agent *Agent) freeSpan(trace TraceMessage) {
 	delete(agent.spans, trace.TraceId+trace.SpanId)
+}
+
+func (agent *Agent) AddToES(data ElasticData) error {
+
+	ctx := context.Background()
+	if _, err := agent.elastic.Index().
+		Index(agent.getElasticIndex()).
+		Type("data").
+		BodyJson(data).
+		Do(ctx); err != nil {
+
+		log.Errorf("could not write to elastic serach :%+v\n", err)
+		return err
+	}
+
+	return nil
 }
