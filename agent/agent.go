@@ -132,10 +132,12 @@ type ElasticData struct {
 }
 
 type MeterMessage struct {
-	Timestamp time.Time `json:"timestamp,omitempty"`
-	Value     float64   `json:"value,omitempty"`
-	Unit      string    `json:"unit,omitempty"`
-	Raw       string    `json:"appendix,omitempty"`
+	Timestamp   time.Time   `json:"timestamp,omitempty"`
+	OperationID string      `json:"operationID,omitempty"`
+	Value       interface{} `json:"value,omitempty"`
+	Unit        string      `json:"unit,omitempty"`
+	Name        string      `json:"name,omitempty"`
+	Raw         string      `json:"appendix,omitempty"`
 }
 
 type LogMessage struct {
