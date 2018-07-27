@@ -39,6 +39,7 @@ func main() {
 	viper.SetConfigName("logging")
 	viper.AddConfigPath("/.config/")
 	viper.AddConfigPath(".config/")
+	viper.AddConfigPath("/opt/blueprint/")
 	viper.AddConfigPath(".")
 
 	viper.SetDefault("Port", 8484)

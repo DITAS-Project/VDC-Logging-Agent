@@ -185,14 +185,23 @@ func (agent *Agent) InitES() error {
 				},
 				"meter": {
 					"properties": {
-						"meter.value": {
-							"type": "double"
+						"meter.timestamp": {
+							"type": "date"
 						},
 						"meter.unit": {
 							"type": "text"
 						},
+						"meter.value": {
+							"type": "text"
+						}
+						"meter.name": {
+							"type": "text"
+						},
 						"meter.appendix": {
-							"type": "object"
+							"type": "text"
+						},
+						"meter.operationID": {
+							"type": "keyword"
 						}
 					}
 				},
