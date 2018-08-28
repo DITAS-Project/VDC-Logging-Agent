@@ -3,11 +3,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:5dd37325cf811f5733e2248d9680ef760bfb634fdedfcf8dd53920d90b35e06c"
+  digest = "1:8c3cab22dfe04d6860383fabbb8a020eeeea88006da5793cc13a14b86c7a8d87"
   name = "github.com/DITAS-Project/TUBUtil"
   packages = ["util"]
   pruneopts = "UT"
-  revision = "e886abc2bf4022b586f342e129474977a5fccfa0"
+  revision = "a119da3a7381ce32689ccaca0f9eff3e72663711"
 
 [[projects]]
   digest = "1:66b8ed452b31eb9075bc53295952487c333a9cb555de57ed61f5664c058d9050"
