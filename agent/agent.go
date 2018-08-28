@@ -16,7 +16,16 @@ import (
 	"github.com/spf13/viper"
 )
 
-var log = logrus.New()
+var logger = logrus.New()
+var log = logrus.NewEntry(logger)
+
+func SetLogger(nLogger *logrus.Logger) {
+	logger = nLogger
+}
+
+func SetLog(entty *logrus.Entry) {
+	log = entty
+}
 
 type Configuration struct {
 	Port int //the port of this service
@@ -84,6 +93,10 @@ func CreateAgent(cnf Configuration) (*Agent, error) {
 
 		opentracing.InitGlobalTracer(tracer)
 	}
+
+	util.SetLogger(logger)
+	util.SetLog(log)
+
 	util.WaitForAvailible(cnf.ElasticSearchURL, nil)
 
 	client, err := elastic.NewSimpleClient(

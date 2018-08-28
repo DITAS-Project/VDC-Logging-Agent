@@ -35,3 +35,11 @@
 [[constraint]]
 	name =  "github.com/openzipkin/zipkin-go-opentracing"
   version = "0.3.2"
+
+[prune]
+  go-tests = true
+  unused-packages = true
+# @see https://github.com/openzipkin/zipkin-go-opentracing/issues/103
+[[override]]
+  branch = "master"
+  name = "github.com/apache/thrift"

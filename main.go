@@ -30,9 +30,27 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
+	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 )
 
-var log = logrus.New()
+var (
+	Build string
+)
+
+var logger = logrus.New()
+var log *logrus.Entry
+
+func init() {
+	if Build == "" {
+		Build = "Debug"
+	}
+	logger.Formatter = new(prefixed.TextFormatter)
+	logger.SetLevel(logrus.DebugLevel)
+	log = logger.WithFields(logrus.Fields{
+		"prefix": "log-agn",
+		"build":  Build,
+	})
+}
 
 func main() {
 
@@ -67,7 +85,15 @@ func main() {
 	pflag.Parse()
 	viper.BindPFlags(pflag.CommandLine)
 
-	log.SetLevel(logrus.DebugLevel)
+	if viper.GetBool("verbose") {
+		logger.SetLevel(logrus.DebugLevel)
+
+		log.Infof("using:%s for:%s @%d", viper.GetString("elastic"), viper.GetString("VDCName"), viper.GetInt("Port"))
+		viper.Debug()
+	}
+
+	agent.SetLogger(logger)
+	agent.SetLog(log)
 
 	agent, err := agent.NewAgent()
 
