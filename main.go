@@ -55,9 +55,9 @@ func init() {
 func main() {
 
 	viper.SetConfigName("logging")
+	viper.AddConfigPath("/opt/blueprint/")
 	viper.AddConfigPath("/.config/")
 	viper.AddConfigPath(".config/")
-	viper.AddConfigPath("/opt/blueprint/")
 	viper.AddConfigPath(".")
 
 	viper.SetDefault("Port", 8484)
@@ -87,9 +87,6 @@ func main() {
 
 	if viper.GetBool("verbose") {
 		logger.SetLevel(logrus.DebugLevel)
-
-		log.Infof("using:%s for:%s @%d", viper.GetString("elastic"), viper.GetString("VDCName"), viper.GetInt("Port"))
-		viper.Debug()
 	}
 
 	agent.SetLogger(logger)
