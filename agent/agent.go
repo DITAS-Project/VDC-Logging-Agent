@@ -106,6 +106,7 @@ func CreateAgent(cnf Configuration) (*Agent, error) {
 
 	client, err := elastic.NewSimpleClient(
 		elastic.SetURL(cnf.ElasticSearchURL),
+		elastic.SetSniff(false),
 		elastic.SetErrorLog(log),
 		elastic.SetInfoLog(log),
 	)
