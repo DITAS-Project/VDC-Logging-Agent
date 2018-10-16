@@ -97,7 +97,7 @@ The command line options are:
 ### API
 This agent offers a logging API that can be used by attached applications to forward important information to the DITAS monitoring system.
 
-An excerpt of the version 1.0.0 API can be found (here)[https://github.com/DITAS-Project/VDC-Logging-Agent/blob/master/api/swagger.v1.yml]. 
+An excerpt of the version 1.0.0 API can be found [here](https://github.com/DITAS-Project/VDC-Logging-Agent/blob/master/api/swagger.v1.yml). 
 
 ## Built With
 
