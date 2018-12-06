@@ -1,4 +1,4 @@
-# DITAS - VDC Request Monitor
+# DITAS - VDC Logging Agent
 
 The VDC Logging agent is a small software service to enable a VDC to transmit metrics and instrumentation information to the DITAS platform.
 The agent offers a rest interface to each VDC, which enables access to elastic search and Zipkin without requiring the VDC to included specific dependencies for these services.
