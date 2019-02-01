@@ -7,14 +7,14 @@ pipeline {
         stage('Image creation') {
             steps {
                 echo 'Creating the image...'
-                sh "docker build -f Dockerfile.testing -t \"ditas/vdc-request-monitor:testing\" ."
-                sh "docker build -f Dockerfile.artifact -t \"ditas/vdc-request-monitor:${TAG}\" ."
+                sh "docker build -f Dockerfile.testing -t \"ditas/vdc-logging-monitor:testing\" ."
+                sh "docker build -f Dockerfile.artifact -t \"ditas/vdc-logging-monitor:${TAG}\" ."
                 echo "Done"
             }
         }
         stage('Testing'){
             steps{
-                sh "docker run --rm ditas/vdc-request-monitor:testing go test ./..."
+                sh "docker run --rm ditas/vdc-logging-monitor:testing go test ./..."
             }
         }
         stage('Push image') {
@@ -30,9 +30,9 @@ pipeline {
                 echo 'Login to Docker Hub as ditasgeneric...'
                 sh "docker login -u ditasgeneric -p ${password}"
                 echo "Done"
-                echo "Pushing the image ditas/vdc-request-monitor:${TAG}..."
+                echo "Pushing the image ditas/vdc-logging-monitor:${TAG}..."
                 
-                sh "docker push ditas/vdc-request-monitor:${TAG}"
+                sh "docker push ditas/vdc-logging-monitor:${TAG}"
                 echo "Done"
             }
         }
