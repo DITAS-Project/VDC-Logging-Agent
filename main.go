@@ -59,6 +59,7 @@ func main() {
 	viper.SetConfigName("logging")
 	viper.AddConfigPath("/opt/blueprint/")
 	viper.AddConfigPath("/.config/")
+	viper.AddConfigPath("/etc/ditas")
 	viper.AddConfigPath(".config/")
 	viper.AddConfigPath(".")
 
