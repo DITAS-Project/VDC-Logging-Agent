@@ -7,8 +7,8 @@ pipeline {
         stage('Image creation') {
             steps {
                 echo 'Creating the image...'
-                sh "docker build -f Dockerfile.testing -t \"ditas/vdc-logging-agent:testing\" ."
-                sh "docker build -f Dockerfile.artifact -t \"ditas/vdc-logging-agent:${TAG}\" ."
+                sh "docker build -f Dockerfile.testing -t \"ditas/vdc-logging-agent:testing\" . --no-cache"
+                sh "docker build -f Dockerfile.artifact -t \"ditas/vdc-logging-agent:${TAG}\" . --no-cache"
                 echo "Done"
             }
         }
