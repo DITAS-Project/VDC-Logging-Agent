@@ -121,7 +121,7 @@ func TestTraceMessages(t *testing.T) {
 func TestMeterMessage(t *testing.T) {
 
 	var meter = MeterMessage{}
-	err := json.Unmarshal([]byte(`{"@timestamp":"2018-02-19T12:32:32Z","meter.value":9231.123,"meter.unit":"byte per second"}`), &meter)
+	err := json.Unmarshal([]byte(`{"timestamp":"2018-02-19T12:32:32Z","value":9231.123,"unit":"byte per second"}`), &meter)
 
 	if err != nil {
 		t.Error(err)
@@ -146,7 +146,7 @@ func TestMeterMessage(t *testing.T) {
 func TestLogMessages(t *testing.T) {
 
 	var log = LogMessage{}
-	err := json.Unmarshal([]byte(`{"@timestamp":"2018-02-19T12:32:32Z","log.value":"foobar"}`), &log)
+	err := json.Unmarshal([]byte(`{"timestamp":"2018-02-19T12:32:32Z","value":"foobar"}`), &log)
 
 	if err != nil {
 		t.Error(err)

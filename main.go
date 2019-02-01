@@ -148,5 +148,5 @@ func startServer(agent *agent.Agent, port int, waitTime time.Duration) {
 }
 
 func notFound(w http.ResponseWriter, req *http.Request) {
-	log.Infof("request not found", req.URL)
+	log.Infof("request not found %+v", req.URL)
 }

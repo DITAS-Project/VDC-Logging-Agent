@@ -77,7 +77,7 @@ func NewAgent() (*Agent, error) {
 	}
 	viper.Unmarshal(&cnf)
 
-	log.Info("config file used @ %s", viper.ConfigFileUsed())
+	log.Infof("config file used @ %v", viper.ConfigFileUsed())
 	if viper.GetBool("verbose") {
 		viper.Debug()
 	}

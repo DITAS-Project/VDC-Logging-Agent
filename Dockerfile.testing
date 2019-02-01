@@ -5,4 +5,5 @@ RUN apk update && apk add git && \
     cd src/github.com/DITAS-Project/VDC-Logging-Agent && \
     dep ensure && \
     CGO_ENABLED=0 go build -a --installsuffix cgo --ldflags="-w -s -X main.Build=$(git rev-parse --short HEAD)" -o vdc-agent
+WORKDIR src/github.com/DITAS-Project/VDC-Logging-Agent
 CMD [ "sh" ]
