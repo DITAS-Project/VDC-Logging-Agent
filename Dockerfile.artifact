@@ -7,6 +7,6 @@ RUN apk update && apk add git && \
     CGO_ENABLED=0 go build -a --installsuffix cgo --ldflags="-w -s -X main.Build=$(git rev-parse --short HEAD)" -o vdc-agent
 
 FROM alpine:3.4
-COPY --from=vdcAgent /go/src/github.com/DITAS-Project/VDC-Logging-Agent/vdc-agent 
+COPY --from=vdcAgent /go/src/github.com/DITAS-Project/VDC-Logging-Agent/vdc-agent  /vdc-agent
 EXPOSE 8484
 CMD [ "./vdc-agent" ]
