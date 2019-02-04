@@ -13,11 +13,19 @@ pipeline {
             }
         }
         stage('Testing'){
+            options {
+                // Don't need to checkout Git again
+                skipDefaultCheckout true
+            }
             steps{
                 sh "docker run --rm ditas/vdc-logging-agent:testing go test ./..."
             }
         }
         stage('Push image') {
+            options {
+                // Don't need to checkout Git again
+                skipDefaultCheckout true
+            }
             steps {
                 echo 'Retrieving Docker Hub password from /opt/ditas-docker-hub.passwd...'
         
@@ -36,5 +44,21 @@ pipeline {
                 echo "Done"
             }
         }
+        stage('Deploy') {
+            options {
+                // Don't need to checkout Git again
+                skipDefaultCheckout true
+            }
+            steps {
+                sh './jenkins/deploy.sh'
+            }
+        }
+        stage('Dredd API validation') {
+            agent any
+            steps {
+                sh './jenkins/dredd.sh'
+            }
+        }
+
     }
 }

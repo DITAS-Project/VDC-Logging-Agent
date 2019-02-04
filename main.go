@@ -57,11 +57,12 @@ func init() {
 func main() {
 
 	viper.SetConfigName("logging")
-	viper.AddConfigPath("/opt/blueprint/")
 	viper.AddConfigPath("/.config/")
-	viper.AddConfigPath("/etc/ditas")
+	viper.AddConfigPath("/etc/ditas/")
 	viper.AddConfigPath(".config/")
 	viper.AddConfigPath(".")
+
+	viper.SetDefault("testing", false)
 
 	viper.SetDefault("Port", 8484)
 	viper.SetDefault("tracing", true)
@@ -83,6 +84,7 @@ func main() {
 	flag.String("vdc", "http://0.0.0.0:0", "vdc address to be send to zipkin")
 	flag.String("name", "vdc", "vdc name that this agent is paired with (used as the elastic search index)")
 	flag.String("elastic", "http://127.0.0.1:9200", "elastic search address")
+	flag.Bool("testing", false, "flag to usie the service in api testing mode")
 
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
 	pflag.Parse()
@@ -90,6 +92,10 @@ func main() {
 
 	if viper.GetBool("verbose") {
 		logger.SetLevel(logrus.DebugLevel)
+	}
+
+	if viper.GetBool("testing") {
+		logger.Warn("RUNNING in API-TESTING-Mode, no data will be persited to any downstream service! DO NOT USE IN PRODUCTION.")
 	}
 
 	agent.SetLogger(logger)
