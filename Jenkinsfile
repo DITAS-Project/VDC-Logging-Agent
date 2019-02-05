@@ -44,19 +44,26 @@ pipeline {
                 echo "Done"
             }
         }
-        stage('Deploy') {
+        stage('Deployment in Staging') {
             options {
                 // Don't need to checkout Git again
                 skipDefaultCheckout true
             }
             steps {
-                sh './jenkins/deploy.sh'
+                sh './jenkins/deploy-staging.sh'
             }
         }
-        stage('Dredd API validation') {
+        stage('Dredd API validation in Staging') {
             agent any
             steps {
                 sh './jenkins/dredd.sh'
+            }
+        }		
+        stage('Production image creation and push') {
+            steps {                
+                // Change the tag from staging to production 
+                sh "docker tag ditas/vdc-logging-agent:${TAG} ditas/vdc-logging-agent:production"
+                sh "docker push ditas/vdc-logging-agent:production"
             }
         }
 
