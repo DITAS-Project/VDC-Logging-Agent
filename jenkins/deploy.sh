@@ -13,13 +13,13 @@ sudo docker pull ditas/vdc-logging-agent:v02
 # Get the host IP
 HOST_IP="$(ip route get 8.8.8.8 | awk '{print $NF; exit}')"
 
-echo "{
+echo '{
     "Port":8484,
     "ElasticSearchURL":"http://127.0.0.1:9200",
-    "VDCName":"tubvdc",
+    "VDCName":"testvdc",
     "Endpoint":"http://127.0.0.1:8080",
-    "verbose":false
-}" >> /tmp/la.json
+    "verbose":true
+}' > /tmp/la.json
 
 # Run the docker mapping the ports and passing the host IP via the environmental variable "DOCKER_HOST_IP"
 sudo docker run -v /tmp/la.json:/.config/logging.json -p 58484:8484 -e DOCKER_HOST_IP=$HOST_IP --restart unless-stopped -d --name vdc-logging-agent ditas/vdc-logging-agent:v02 /vdc-agent --testing
