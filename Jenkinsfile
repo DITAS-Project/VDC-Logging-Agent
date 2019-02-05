@@ -13,7 +13,7 @@ pipeline {
             }
         }
         stage('Testing'){
-            options {/vdc-agent
+            options {
                 // Don't need to checkout Git again
                 skipDefaultCheckout true
             }
