@@ -1,6 +1,6 @@
 pipeline {
     environment {
-      TAG = "v02"
+      TAG = "master"
     }
     agent any   
     stages {
