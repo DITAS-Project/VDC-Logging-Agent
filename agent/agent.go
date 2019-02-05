@@ -77,7 +77,7 @@ func NewAgent() (*Agent, error) {
 	}
 	viper.Unmarshal(&cnf)
 
-	log.Info("config file used @ %s", viper.ConfigFileUsed())
+	log.Infof("config file used @ %v", viper.ConfigFileUsed())
 	if viper.GetBool("verbose") {
 		viper.Debug()
 	}
@@ -87,7 +87,7 @@ func NewAgent() (*Agent, error) {
 
 func CreateAgent(cnf Configuration) (*Agent, error) {
 	var collector zipkin.Collector
-	if viper.GetBool("tracing") {
+	if !viper.GetBool("testing") && viper.GetBool("tracing") {
 		// Create our HTTP collector.
 		collector, err := zipkin.NewHTTPCollector(cnf.ZipkinEndpoint)
 
@@ -120,17 +120,24 @@ func CreateAgent(cnf Configuration) (*Agent, error) {
 	util.SetLogger(logger)
 	util.SetLog(log)
 
-	util.WaitForAvailible(cnf.ElasticSearchURL, nil)
+	var client *elastic.Client
+	if !viper.GetBool("testing") {
+		util.WaitForAvailible(cnf.ElasticSearchURL, nil)
 
-	client, err := elastic.NewSimpleClient(
-		elastic.SetURL(cnf.ElasticSearchURL),
-		elastic.SetSniff(false),
-		elastic.SetErrorLog(log),
-		elastic.SetInfoLog(log),
-	)
-	if err != nil {
-		log.Errorf("unable to create elastic client tracer: %+v\n", err)
-		return nil, err
+		var err error
+
+		client, err = elastic.NewSimpleClient(
+			elastic.SetURL(cnf.ElasticSearchURL),
+			elastic.SetSniff(false),
+			elastic.SetErrorLog(log),
+			elastic.SetInfoLog(log),
+		)
+		if err != nil {
+			log.Errorf("unable to create elastic client tracer: %+v\n", err)
+			return nil, err
+		}
+	} else {
+		log.Warn("running in testing mode")
 	}
 
 	var ctx = Agent{
@@ -141,17 +148,17 @@ func CreateAgent(cnf Configuration) (*Agent, error) {
 		isDebugging: viper.GetBool("verbose"),
 		tracing:     viper.GetBool("tracing"),
 	}
-
-	// if err := ctx.init(); err != nil {
-	// 	log.Errorf("unable to initilize this agent: %+v\n", err)
-	// }
-
 	return &ctx, nil
 }
 
 func (agent *Agent) Shutdown() {
-	agent.collector.Close()
-	agent.elastic.Stop()
+	if agent.collector != nil {
+		agent.collector.Close()
+	}
+
+	if agent.elastic != nil {
+		agent.elastic.Stop()
+	}
 }
 
 type TraceMessage struct {
@@ -252,10 +259,12 @@ func (agent *Agent) InitES() error {
 			}
 		`
 
-	if ok, err := agent.elastic.IndexExists(agent.getElasticIndex()).Do(ctx); !ok || err != nil {
-		log.Infof("creating inxex %s", agent.getElasticIndex())
+	if agent.elastic != nil {
 
-		index := fmt.Sprintf(`{
+		if ok, err := agent.elastic.IndexExists(agent.getElasticIndex()).Do(ctx); !ok || err != nil {
+			log.Infof("creating inxex %s", agent.getElasticIndex())
+
+			index := fmt.Sprintf(`{
 			"settings": {
 				"number_of_shards": 1,
 				"number_of_replicas": 0
@@ -267,24 +276,27 @@ func (agent *Agent) InitES() error {
 			}
 		}`, mappings)
 
-		_, err := agent.elastic.CreateIndex(agent.getElasticIndex()).BodyString(index).Do(ctx)
-		if err != nil {
-			return err
-		}
-		return nil
+			_, err := agent.elastic.CreateIndex(agent.getElasticIndex()).BodyString(index).Do(ctx)
+			if err != nil {
+				return err
+			}
 
-	} else {
-		_, err := agent.elastic.PutMapping().
-			Index(agent.getElasticIndex()).
-			Type("data").
-			BodyString(fmt.Sprintf("{%s},", mappings)).
-			Do(ctx)
-		if err != nil {
-			return err
+			return nil
+
+		} else {
+			_, err := agent.elastic.PutMapping().
+				Index(agent.getElasticIndex()).
+				Type("data").
+				BodyString(fmt.Sprintf("{%s},", mappings)).
+				Do(ctx)
+			if err != nil {
+				return err
+			}
+			return nil
 		}
-		return nil
 	}
-
+	log.Info("no elastic search, hope we are running in testing mode :!")
+	return nil
 }
 
 func (agent *Agent) getElasticIndex() string {
@@ -317,16 +329,22 @@ func (agent *Agent) freeSpan(trace TraceMessage) {
 }
 
 func (agent *Agent) AddToES(data ElasticData) error {
+	if viper.GetBool("testing") {
+		log.Infof("testing only will not use elastic serach %+v", data)
+		return nil
+	}
 
-	ctx := context.Background()
-	if _, err := agent.elastic.Index().
-		Index(agent.getElasticIndex()).
-		Type("data").
-		BodyJson(data).
-		Do(ctx); err != nil {
+	if agent.elastic != nil {
+		ctx := context.Background()
+		if _, err := agent.elastic.Index().
+			Index(agent.getElasticIndex()).
+			Type("data").
+			BodyJson(data).
+			Do(ctx); err != nil {
 
-		log.Errorf("could not write to elastic serach :%+v\n", err)
-		return err
+			log.Errorf("could not write to elastic serach :%+v\n", err)
+			return err
+		}
 	}
 
 	return nil

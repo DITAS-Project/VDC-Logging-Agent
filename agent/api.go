@@ -34,12 +34,17 @@ func (agent *Agent) Trace(w http.ResponseWriter, req *http.Request) {
 
 		log.Infof("trace request for %s : %s", trace.SpanId, trace.Operation)
 
-		span := agent.getSpan(trace)
+		if agent.collector != nil {
+			log.Warn("tring to trace but no tracer set!")
+			span := agent.getSpan(trace)
 
-		if trace.Message != "" {
-			span.LogEvent(trace.Message)
+			if trace.Message != "" {
+				span.LogEvent(trace.Message)
+			}
 		}
 	}
+
+	w.WriteHeader(200)
 }
 
 func (agent *Agent) Close(w http.ResponseWriter, req *http.Request) {
@@ -51,10 +56,14 @@ func (agent *Agent) Close(w http.ResponseWriter, req *http.Request) {
 
 		log.Infof("trace request for %s : %s", trace.SpanId, trace.Operation)
 
-		var span = agent.getSpan(trace)
-		span.Finish()
-		agent.freeSpan(trace)
+		if agent.collector != nil {
+			log.Warn("tring to trace but no tracer set!")
+			var span = agent.getSpan(trace)
+			span.Finish()
+			agent.freeSpan(trace)
+		}
 	}
+	w.WriteHeader(200)
 }
 
 func (agent *Agent) Meter(w http.ResponseWriter, req *http.Request) {
@@ -62,16 +71,28 @@ func (agent *Agent) Meter(w http.ResponseWriter, req *http.Request) {
 	_ = json.NewDecoder(req.Body).Decode(&meter)
 
 	if agent.isDebugging {
-		//TODO: put request body into meter.raw
+		body, err := ioutil.ReadAll(req.Body)
+		if err != nil {
+			log.Errorf("could not write to elastic serach :%+v\n", err)
+		}
+
+		defer req.Body.Close()
+
+		meter.Raw = string(body)
 	}
+
 	data := ElasticData{
 		Timestamp: time.Now(),
 		Meter:     &meter,
 	}
+
 	if (meter.Timestamp == time.Time{}) {
 		data.Timestamp = time.Now()
 	}
 
+	agent.AddToES(data)
+
+	w.WriteHeader(200)
 }
 
 func (agent *Agent) Log(w http.ResponseWriter, req *http.Request) {
@@ -89,5 +110,8 @@ func (agent *Agent) Log(w http.ResponseWriter, req *http.Request) {
 			Value: string(body),
 		},
 	}
+
 	agent.AddToES(data)
+
+	w.WriteHeader(200)
 }
