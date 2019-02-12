@@ -1,17 +1,9 @@
-FROM golang:1.10.0-alpine as vdcAgent
-
-ENV SOURCEDIR=/go/src/github.com/DITAS-Project/VDC-Logging-Agent
-RUN mkdir -p ${SOURCEDIR}
-WORKDIR ${SOURCEDIR}
+FROM golang:1.11.5 as vdcAgent
+WORKDIR /opt
 COPY . .
-RUN rm -rf vendor/ && \
-    apk update && apk add git && \
-    go get -u github.com/golang/dep/cmd/dep && \
-    cd ${SOURCEDIR} && \
-    dep ensure && \
-    CGO_ENABLED=0 go build -a --installsuffix cgo --ldflags="-w -s -X main.Build=$(git rev-parse --short HEAD)" -o vdc-agent
+RUN CGO_ENABLED=0 go build -a --installsuffix cgo --ldflags="-w -s -X main.Build=$(git rev-parse --short HEAD)" -o vdc-agent
 
-FROM alpine:3.4
-COPY --from=vdcAgent /go/src/github.com/DITAS-Project/VDC-Logging-Agent/vdc-agent  /vdc-agent
+FROM alpine:latest
+COPY --from=vdcAgent /opt/vdc-agent  /vdc-agent
 EXPOSE 8484
 CMD [ "./vdc-agent" ]
