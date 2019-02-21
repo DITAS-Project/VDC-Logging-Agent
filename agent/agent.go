@@ -24,12 +24,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/DITAS-Project/TUBUtil/util"
+	"github.com/DITAS-Project/TUBUtil"
 	"github.com/olivere/elastic"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
+	"github.com/openzipkin-contrib/zipkin-go-opentracing/types"
 	zipkin "github.com/openzipkin/zipkin-go-opentracing"
-	"github.com/openzipkin/zipkin-go-opentracing/types"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )

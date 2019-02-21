@@ -11,11 +11,6 @@ These instructions will get you a copy of the project up and running on your loc
 ### Prerequisites
 
 To install the go lang tools go to: [Go Getting Started](https://golang.org/doc/install)
-
-
-To install dep, you can use this command or go to [Dep - Github](https://github.com/golang/dep):
-```
-curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 ```
 
 ### Installing
@@ -26,9 +21,6 @@ For local testing and building for that you can follow the following steps:
 
 install dependencies (only needs to be done once):
 
-```
-dep ensure
-```
 
 compile
 ```
@@ -101,7 +93,6 @@ An excerpt of the version 1.0.0 API can be found [here](https://github.com/DITAS
 
 ## Built With
 
-* [dep](https://github.com/golang/dep)
 * [viper](https://github.com/spf13/viper)
 * Zipkin
 * OpenTracing
