@@ -20,13 +20,14 @@ package agent
 
 import (
 	"encoding/json"
+	util "github.com/DITAS-Project/TUBUtil"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
 
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 )
 
 func TestTracingMethods(t *testing.T) {
@@ -165,4 +166,43 @@ func TestLogMessages(t *testing.T) {
 		t.Log("timestamps did not match")
 		t.Fail()
 	}
+}
+
+func TestElastic(t *testing.T) {
+	ElasticSearchURL := "http://localhost:9200"
+	vdcName := "test-client"
+
+	t.Logf("Waiting for ElasticSearch")
+	var timeout time.Duration = 60000
+	err := util.WaitForAvailible(ElasticSearchURL, &timeout)
+	if err != nil{
+		t.Logf("elastic search unavailible: %+v\n", err)
+		t.SkipNow()
+	}
+
+	agt, err := CreateAgent(Configuration{
+		VDCName:          vdcName,
+		ElasticSearchURL: ElasticSearchURL,
+	})
+
+	if err != nil {
+		t.Logf("could not start agent %+v", err)
+		t.Fail()
+	}
+
+
+	err = agt.AddToES(ElasticData{
+		Meter:&MeterMessage{
+			Name:"test",
+			OperationID:"testOP",
+			Timestamp:time.Now(),
+			Unit:"string",
+			Value:"123456sadfghj"},
+	})
+
+	if err != nil{
+		t.Errorf("Failed to send agent data %+v",err)
+		t.Fail()
+	}
+
 }
