@@ -11,7 +11,6 @@ These instructions will get you a copy of the project up and running on your loc
 ### Prerequisites
 
 To install the go lang tools go to: [Go Getting Started](https://golang.org/doc/install)
-```
 
 ### Installing
 
@@ -21,36 +20,26 @@ For local testing and building for that you can follow the following steps:
 
 install dependencies (only needs to be done once):
 
-
 compile
-```
-CGO_ENABLED=0 GOOS=linux go build -a --installsuffix cgo --ldflags="-w -s -X main.Build=$(git rev-parse --short HEAD)" -o log-agnt
-```
+`CGO_ENABLED=0 GOOS=linux go build -a --installsuffix cgo --ldflags="-w -s -X main.Build=$(git rev-parse --short HEAD)" -o log-agnt`
 
 to run locally:
-```
-./log-agnt
-```
+`./log-agnt`
 
 For the docker approach, you can use the provided dockerfile to build a running artifact as a Docker container.
 
 build the docker container:
-```
-docker build -t ditas/logging-agent -f Dockerfile.artifact . 
-```
+`docker build -t ditas/logging-agent -f Dockerfile.artifact . `
 
 Attach the docker container to a VDC or other microservice like component:
-```
-docker run -v ./logging.json:/opt/blueprint/logging.json --pid=container:<APPID> -p 8484:8484 ditas/logging-agent 
-```
+`docker run -v ./logging.json:/opt/blueprint/logging.json --pid=container:<APPID> -p 8484:8484 ditas/logging-agent`
+
 Here `<APPID>` must be the container ID of the application you want to observe. The port at 8484 is used for the logging rest interface and only needs to be exposed if you plan on logging data of external services outside the attached container. Also, refer to the **Configuration** section for information about the `logging.json`-config file.
 
 ## Running the tests
 
 For testing you can use:
-```
- go test ./...
-```
+`go test ./...`
 
 For that make sure you have an elastic search running locally at the default port. 
 
@@ -80,11 +69,11 @@ Alternatively, users can use flags with the same name to configure the agent.
 
 #### V01
 The command line options are:
- - ``-port`` port that the agent should listen on
- - ``-zipkin`` Zipkin endpoint 
- - ``-vdc``  VDC name that this agent is paired with (used as the elastic search index)
- - ``-elastic`` elastic search address
- - ``-wait`` the duration for which the server gracefully wait for existing connections in seconds
+ - `-port` port that the agent should listen on
+ - `-zipkin` Zipkin endpoint 
+ - `-vdc`  VDC name that this agent is paired with (used as the elastic search index)
+ - `-elastic` elastic search address
+ - `-wait` the duration for which the server gracefully wait for existing connections in seconds
 
 ### API
 This agent offers a logging API that can be used by attached applications to forward important information to the DITAS monitoring system.
