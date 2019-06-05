@@ -55,6 +55,10 @@ type Configuration struct {
 
 	ElasticSearchURL string //eleasticSerach endpoint
 
+	ElasticBasicAuth bool //if active we use basic auth
+	ElasticUser      string
+	ElasticPassword  string
+
 	waitTime time.Duration //the duration for which the server gracefully wait for existing connections to finish in secounds
 
 }
@@ -122,16 +126,28 @@ func CreateAgent(cnf Configuration) (*Agent, error) {
 
 	var client *elastic.Client
 	if !viper.GetBool("testing") {
-		util.WaitForAvailible(cnf.ElasticSearchURL, nil)
 
 		var err error
+		if cnf.ElasticBasicAuth {
+			util.WaitForAvailibleWithAuth(cnf.ElasticSearchURL,[]string{cnf.ElasticUser,cnf.ElasticPassword}, nil)
+			client, err = elastic.NewSimpleClient(
+				elastic.SetURL(cnf.ElasticSearchURL),
+				elastic.SetSniff(false),
+				elastic.SetErrorLog(log),
+				elastic.SetInfoLog(log),
+				elastic.SetBasicAuth(cnf.ElasticUser,cnf.ElasticPassword),
+			)
+		} else {
+			util.WaitForAvailible(cnf.ElasticSearchURL, nil)
+			client, err = elastic.NewSimpleClient(
+				elastic.SetURL(cnf.ElasticSearchURL),
+				elastic.SetSniff(false),
+				elastic.SetErrorLog(log),
+				elastic.SetInfoLog(log),
+			)
+		}
 
-		client, err = elastic.NewSimpleClient(
-			elastic.SetURL(cnf.ElasticSearchURL),
-			elastic.SetSniff(false),
-			elastic.SetErrorLog(log),
-			elastic.SetInfoLog(log),
-		)
+		
 		if err != nil {
 			log.Errorf("unable to create elastic client tracer: %+v\n", err)
 			return nil, err

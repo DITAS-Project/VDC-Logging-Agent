@@ -24,3 +24,5 @@
 
 vendor/
 *.local.*
+VDC-Logging-Agent.iml
+VDC-Logging-Agent
