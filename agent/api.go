@@ -19,7 +19,9 @@
 package agent
 
 import (
+	"bytes"
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -30,17 +32,37 @@ func (agent *Agent) Trace(w http.ResponseWriter, req *http.Request) {
 
 	if agent.tracing {
 		var trace TraceMessage
-		_ = json.NewDecoder(req.Body).Decode(&trace)
+		var body io.ReadCloser
+		if agent.isDebugging {
+			b, err := ioutil.ReadAll(req.Body)
+			if err != nil {
+				log.Errorf("could not write to elastic serach :%+v\n", err)
+			}
 
-		log.Infof("trace request for %s : %s", trace.SpanId, trace.Operation)
+			defer req.Body.Close()
+
+			log.Debugln(string(b))
+
+			body = ioutil.NopCloser(bytes.NewReader(b))
+
+		} else {
+			body = req.Body
+		}
+		err := json.NewDecoder(body).Decode(&trace)
+
+		if err != nil {
+			log.Errorf("faile dto read trace message %+v", err)
+		}
+
+		log.Infof("trace request for %s : %s", trace.ParentSpanId, trace.Operation)
 
 		if agent.collector != nil {
-			log.Warn("tring to trace but no tracer set!")
 			span := agent.getSpan(trace)
-
 			if trace.Message != "" {
 				span.LogEvent(trace.Message)
 			}
+		} else {
+			log.Warn("tring to trace but no tracer set!")
 		}
 	}
 
@@ -48,19 +70,41 @@ func (agent *Agent) Trace(w http.ResponseWriter, req *http.Request) {
 }
 
 func (agent *Agent) Close(w http.ResponseWriter, req *http.Request) {
+
 	log.Info("got trace finish request")
 
 	if agent.tracing {
 		var trace TraceMessage
-		_ = json.NewDecoder(req.Body).Decode(&trace)
+		var body io.ReadCloser
+		if agent.isDebugging {
+			b, err := ioutil.ReadAll(req.Body)
+			if err != nil {
+				log.Errorf("could not write to elastic serach :%+v\n", err)
+			}
 
-		log.Infof("trace request for %s : %s", trace.SpanId, trace.Operation)
+			defer req.Body.Close()
+			log.Debugln(string(b))
+
+			body = ioutil.NopCloser(bytes.NewReader(b))
+
+		} else {
+			body = req.Body
+		}
+		err := json.NewDecoder(body).Decode(&trace)
+
+		if err != nil {
+			log.Errorf("faile dto read trace message %+v", err)
+		}
+
+		log.Infof("trace request for %s : %s", trace.ParentSpanId, trace.Operation)
 
 		if agent.collector != nil {
-			log.Warn("tring to trace but no tracer set!")
+
 			var span = agent.getSpan(trace)
 			span.Finish()
 			agent.freeSpan(trace)
+		} else {
+			log.Warn("tring to trace but no tracer set!")
 		}
 	}
 	w.WriteHeader(200)
@@ -77,7 +121,7 @@ func (agent *Agent) Meter(w http.ResponseWriter, req *http.Request) {
 		}
 
 		defer req.Body.Close()
-
+		log.Debugln(string(body))
 		meter.Raw = string(body)
 	}
 
@@ -96,10 +140,13 @@ func (agent *Agent) Meter(w http.ResponseWriter, req *http.Request) {
 }
 
 func (agent *Agent) Log(w http.ResponseWriter, req *http.Request) {
-
 	body, err := ioutil.ReadAll(req.Body)
+
 	if err != nil {
 		log.Errorf("could not write to elastic serach :%+v\n", err)
+	}
+	if agent.isDebugging {
+		log.Debugln(string(body))
 	}
 
 	defer req.Body.Close()

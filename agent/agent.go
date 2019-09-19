@@ -21,10 +21,11 @@ package agent
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"strconv"
 	"time"
 
-	"github.com/DITAS-Project/TUBUtil"
+	util "github.com/DITAS-Project/TUBUtil"
 	"github.com/olivere/elastic"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
@@ -47,6 +48,8 @@ func SetLog(entty *logrus.Entry) {
 
 type Configuration struct {
 	Port int //the port of this service
+
+	IgnoreElastic bool //skip elastic validation only for testing..
 
 	ZipkinEndpoint string //zipkin endpoint
 
@@ -72,7 +75,7 @@ type Agent struct {
 }
 
 func NewAgent() (*Agent, error) {
-
+	rand.Seed(time.Now().UTC().UnixNano())
 	err := viper.ReadInConfig()
 	cnf := Configuration{}
 	if err != nil {
@@ -90,7 +93,13 @@ func NewAgent() (*Agent, error) {
 }
 
 func CreateAgent(cnf Configuration) (*Agent, error) {
-	var collector zipkin.Collector
+	var ctx = Agent{
+		name:        cnf.VDCName,
+		spans:       make(map[string]opentracing.Span),
+		isDebugging: viper.GetBool("verbose"),
+		tracing:     viper.GetBool("tracing"),
+	}
+
 	if !viper.GetBool("testing") && viper.GetBool("tracing") {
 		// Create our HTTP collector.
 		collector, err := zipkin.NewHTTPCollector(cnf.ZipkinEndpoint)
@@ -119,51 +128,47 @@ func CreateAgent(cnf Configuration) (*Agent, error) {
 		}
 
 		opentracing.InitGlobalTracer(tracer)
+		ctx.collector = collector
 	}
 
 	util.SetLogger(logger)
 	util.SetLog(log)
 
-	var client *elastic.Client
 	if !viper.GetBool("testing") {
+		if !cnf.IgnoreElastic {
+			var client *elastic.Client
+			var err error
+			if cnf.ElasticBasicAuth {
+				util.WaitForAvailibleWithAuth(cnf.ElasticSearchURL, []string{cnf.ElasticUser, cnf.ElasticPassword}, nil)
+				client, err = elastic.NewSimpleClient(
+					elastic.SetURL(cnf.ElasticSearchURL),
+					elastic.SetSniff(false),
+					elastic.SetErrorLog(log),
+					elastic.SetInfoLog(log),
+					elastic.SetBasicAuth(cnf.ElasticUser, cnf.ElasticPassword),
+				)
+			} else {
+				util.WaitForAvailible(cnf.ElasticSearchURL, nil)
+				client, err = elastic.NewSimpleClient(
+					elastic.SetURL(cnf.ElasticSearchURL),
+					elastic.SetSniff(false),
+					elastic.SetErrorLog(log),
+					elastic.SetInfoLog(log),
+				)
+			}
 
-		var err error
-		if cnf.ElasticBasicAuth {
-			util.WaitForAvailibleWithAuth(cnf.ElasticSearchURL,[]string{cnf.ElasticUser,cnf.ElasticPassword}, nil)
-			client, err = elastic.NewSimpleClient(
-				elastic.SetURL(cnf.ElasticSearchURL),
-				elastic.SetSniff(false),
-				elastic.SetErrorLog(log),
-				elastic.SetInfoLog(log),
-				elastic.SetBasicAuth(cnf.ElasticUser,cnf.ElasticPassword),
-			)
+			if err != nil {
+				log.Errorf("unable to create elastic client tracer: %+v\n", err)
+				return nil, err
+			}
+			ctx.elastic = client
 		} else {
-			util.WaitForAvailible(cnf.ElasticSearchURL, nil)
-			client, err = elastic.NewSimpleClient(
-				elastic.SetURL(cnf.ElasticSearchURL),
-				elastic.SetSniff(false),
-				elastic.SetErrorLog(log),
-				elastic.SetInfoLog(log),
-			)
-		}
-
-		
-		if err != nil {
-			log.Errorf("unable to create elastic client tracer: %+v\n", err)
-			return nil, err
+			log.Warn("ignoring elastic")
 		}
 	} else {
 		log.Warn("running in testing mode")
 	}
 
-	var ctx = Agent{
-		name:        cnf.VDCName,
-		spans:       make(map[string]opentracing.Span),
-		collector:   collector,
-		elastic:     client,
-		isDebugging: viper.GetBool("verbose"),
-		tracing:     viper.GetBool("tracing"),
-	}
 	return &ctx, nil
 }
 
@@ -208,16 +213,24 @@ type LogMessage struct {
 //tracing functions
 func (t TraceMessage) build() *zipkin.SpanContext {
 	var pid *uint64
+	var sid uint64
 	ppid, err := strconv.ParseUint(t.ParentSpanId, 16, 64)
 	if err != nil {
 		pid = nil
 	} else {
 		pid = &ppid
 	}
-	sid, err := strconv.ParseUint(t.SpanId, 16, 64)
-	if err != nil {
-		log.Errorf("did not parse sid %s - %s", t.SpanId, err)
-		return nil
+
+
+	if t.SpanId != "" {
+		foo, err := strconv.ParseUint(t.SpanId, 16, 64)
+		if err != nil {
+			log.Errorf("did not parse sid %s - %s", t.SpanId, err)
+			return nil
+		}
+		sid = foo
+	} else {
+		sid = rand.Uint64()
 	}
 
 	tid, err := types.TraceIDFromHex(t.TraceId)
