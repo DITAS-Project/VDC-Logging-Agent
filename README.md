@@ -46,13 +46,20 @@ For that make sure you have an elastic search running locally at the default por
 
 ## Configuration
 To configure the agent, you can specify the following values in a JSON file:
- * ElasticSearchURL => The URL that all aggregated data is sent to
+### General
  * VDCName => the Name used to store the information under
  * Endpoint => the address used as the service address in zipkin
- * ZipkinEndpoint => the address of the zipkin collector
- * tracing => boolean that indicates if tracing should be enabled 
  * Port => port of the agent
  * verbose => boolean to indicate if the agent should use verbose logging (recommended for debugging)
+ ### Elasticsearch
+ * ElasticSearchURL => The URL that all aggregated data is sent to
+ * ElasticBasicAuth => boolean to indicate if authentication for the elastic is required
+ * ElasticUser => username for the elasticsearch
+ * ElasticPassword => password for the elasticsearch
+ * IgnoreElastic => boolean which disables the sending of data to the elastic search (use only for testing)
+### Tracing
+ * ZipkinEndpoint => the address of the zipkin collector
+ * tracing => boolean that indicates if tracing should be enabled 
 
 An example file could look like this:
 ```
