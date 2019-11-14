@@ -3,5 +3,8 @@
     "ElasticSearchURL":"http://127.0.0.1:9200",
     "VDCName":"tubvdc",
     "Endpoint":"http://127.0.0.1:8080",
-    "verbose":false
+    "verbose":true,
+    "tracing": true,
+    "IgnoreElastic": true,
+    "zipkinendpoint":"https://zipkin.ditasbench.k8s.ise-apps.de/v1/spans"
 }

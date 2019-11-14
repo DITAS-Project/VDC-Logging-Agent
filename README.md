@@ -51,6 +51,7 @@ To configure the agent, you can specify the following values in a JSON file:
  * Endpoint => the address used as the service address in zipkin
  * Port => port of the agent
  * verbose => boolean to indicate if the agent should use verbose logging (recommended for debugging)
+ * waitTime => the duration for which the server gracefully wait for existing connections to finish in secounds
  ### Elasticsearch
  * ElasticSearchURL => The URL that all aggregated data is sent to
  * ElasticBasicAuth => boolean to indicate if authentication for the elastic is required
